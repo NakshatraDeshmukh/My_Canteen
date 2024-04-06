@@ -161,7 +161,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                 rememberPassword) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Processing Data'),
+                                  content: Text('Login successful'),
                                 ),
                               );
                               Navigator.push(

@@ -189,7 +189,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 agreePersonalData) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Processing Data'),
+                                  content: Text('Registered sucessfully'),
                                 ),
                               );
                               Navigator.push(
