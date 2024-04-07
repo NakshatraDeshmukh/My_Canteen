@@ -1,12 +1,10 @@
 import 'dart:ffi';
 
-import 'package:canteen_final/screens/selection_screen.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:canteen_final/screens/welcome_screen.dart';
 import 'package:canteen_final/theme/theme.dart';
 
-void main() {
+void main()  {
   //WidgetsFlutterBinding.ensureInitialized();
  // await Firebase.initializeApp();
   runApp(const MyApp());
