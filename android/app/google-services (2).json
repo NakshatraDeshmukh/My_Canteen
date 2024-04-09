@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "660783818504",
+    "project_id": "flutter-canteen-c1289",
+    "storage_bucket": "flutter-canteen-c1289.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:660783818504:android:0de5963c52479382e9eebd",
+        "android_client_info": {
+          "package_name": "com.example.canteen_final"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCU9vAvWqBlkYTMDIY6M2gIgVYl_ruWY4s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

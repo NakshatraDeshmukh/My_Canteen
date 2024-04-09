@@ -1,9 +1,12 @@
+import 'package:canteen_final/auth/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 //import 'package:icons_plus/icons_plus.dart';
 import 'package:canteen_final/screens/signin_screen.dart';
-import 'package:canteen_final/theme/theme.dart';
+
 import 'package:canteen_final/widgets/custom_scaffold.dart';
 import 'package:canteen_final/screens/selection_screen.dart';
+
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
@@ -12,6 +15,20 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  final FirebaseAuthService _auth = FirebaseAuthService();
+
+  TextEditingController _usernameContoller = TextEditingController();
+  TextEditingController _emailContoller = TextEditingController();
+  TextEditingController _passwordContoller = TextEditingController();
+
+  @override
+  void dispose() {
+    _usernameContoller.dispose();
+    _emailContoller.dispose();
+    _passwordContoller.dispose();
+    super.dispose();
+  }
+
   final _formSignupKey = GlobalKey<FormState>();
   bool agreePersonalData = true;
   @override
@@ -47,16 +64,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       Text(
                         'Get Started',
                         style: TextStyle(
-                          fontSize: 30.0,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF2C1812)
-                        ),
+                            fontSize: 30.0,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF2C1812)),
                       ),
                       const SizedBox(
                         height: 40.0,
                       ),
                       // full name
                       TextFormField(
+                        controller: _usernameContoller,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter Full name';
@@ -88,6 +105,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       // email
                       TextFormField(
+                        controller: _emailContoller,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter Email';
@@ -119,6 +137,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       // password
                       TextFormField(
+                        controller: _passwordContoller,
                         obscureText: true,
                         obscuringCharacter: '*',
                         validator: (value) {
@@ -178,36 +197,74 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ],
                       ),
                       const SizedBox(
-                          height: 25.0,
-                        ),
-                        // signup button
+                        height: 25.0,
+                      ),
+                      // signup button
+                      // GestureDetector(
+                      //   child: Container(
+                      //     width: double.infinity,
+                      //     height: 45,
+                      //     decoration: BoxDecoration(
+                      //       color: Color(0xFF4A2821),
+                      //       borderRadius: BorderRadius.circular(10),
+                      //     ),
+                      //     child: Center(
+                      //       child: Text(
+                      //         "Sign Up",
+                      //         style: TextStyle(
+                      //             color: Colors.white,
+                      //             fontWeight: FontWeight.bold),
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
+
+                      //->>>>>>>>>>> original button
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (_formSignupKey.currentState!.validate() &&
-                                agreePersonalData) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Registered sucessfully'),
+                        child: GestureDetector(
+                            onTap: _signUp,
+                            child: Container(
+                                width: double.infinity,
+                                height: 45,
+                                decoration: BoxDecoration(
+                                  color: Color(0xFF4A2821),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                              );
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => SelectionScreen(), // Replace NextScreen with your desired screen
-                                ),
-                              );
-                            } else if (!agreePersonalData) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        'Please agree to the processing of personal data')),
-                              );
-                            }
-                          },
-                          child: const Text('Sign up'),
-                      ),
+                                child: Align(
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    'Sign up',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ))
+                            // () {
+                            //   if (_formSignupKey.currentState!.validate() &&
+                            //       agreePersonalData) {
+                            //     ScaffoldMessenger.of(context).showSnackBar(
+                            //       const SnackBar(
+                            //         content: Text('Registered sucessfully'),
+                            //       ),
+                            //     );
+                            //     Navigator.push(
+                            //       context,
+                            //       MaterialPageRoute(
+                            //         builder: (context) =>
+                            //             SelectionScreen(), // Replace NextScreen with your desired screen
+                            //       ),
+                            //     );
+                            //   } else if (!agreePersonalData) {
+                            //     ScaffoldMessenger.of(context).showSnackBar(
+                            //       const SnackBar(
+                            //           content: Text(
+                            //               'Please agree to the processing of personal data')),
+                            //     );
+                            //   }
+                            // },
+
+                            ),
                       ),
                       const SizedBox(
                         height: 30.0,
@@ -247,13 +304,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       // sign up social media logo
                       Row(
-                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      //  children:[
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        //  children:[
                         //  Logo(Logos.facebook_f),
                         //  Logo(Logos.twitter),
                         //  Logo(Logos.google),
                         //  Logo(Logos.apple),
-                      //  ],
+                        //  ],
                       ),
                       const SizedBox(
                         height: 25.0,
@@ -299,5 +356,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ],
       ),
     );
+  }
+
+  void _signUp() async {
+    String username = _usernameContoller.text;
+    String email = _emailContoller.text;
+    String password = _passwordContoller.text;
+
+    User? user = await _auth.signUpWithEmailAndPassword(email, password);
+
+    if (user != null) {
+      print("User is already registered");
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (e) => const SelectionScreen(),
+          ));
+    } else {
+      print("some error occured");
+    }
   }
 }

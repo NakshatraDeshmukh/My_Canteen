@@ -1,4 +1,6 @@
+import 'package:canteen_final/auth/auth_service.dart';
 import 'package:canteen_final/screens/selection_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 //import 'package:icons_plus/icons_plus.dart';
 import 'package:canteen_final/screens/signup_screen.dart';
@@ -14,6 +16,18 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
+  final FirebaseAuthService _auth = FirebaseAuthService();
+
+  TextEditingController _emailContoller = TextEditingController();
+  TextEditingController _passwordContoller = TextEditingController();
+
+  @override
+  void dispose() {
+    _emailContoller.dispose();
+    _passwordContoller.dispose();
+    super.dispose();
+  }
+
   final _formSignInKey = GlobalKey<FormState>();
   bool rememberPassword = true;
   @override
@@ -56,6 +70,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         height: 40.0,
                       ),
                       TextFormField(
+                        controller: _emailContoller,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter Email';
@@ -86,6 +101,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         height: 25.0,
                       ),
                       TextFormField(
+                        controller: _passwordContoller,
                         obscureText: true,
                         obscuringCharacter: '*',
                         validator: (value) {
@@ -155,32 +171,56 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (_formSignInKey.currentState!.validate() &&
-                                rememberPassword) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Login successful'),
+                        child: GestureDetector(
+                            onTap: _signIn,
+                            child: Container(
+                                width: double.infinity,
+                                height: 45,
+                                decoration: BoxDecoration(
+                                  color: Color(0xFF4A2821),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                              );
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => SelectionScreen(), // Replace NextScreen with your desired screen
-                                ),
-                              );
-                            } else if (!rememberPassword) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        'Please agree to the processing of personal data')),
-                              );
-                            }
-                          },
-                          child: const Text('Sign in'),
-                        ),
+                                child: Align(
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    'Sign In',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ))),
                       ),
+                      // SizedBox(
+                      //   width: double.infinity,
+                      //   child: GestureDetector(
+                      //     onTap: _signIn,
+
+                      //     // () {
+                      //     //   if (_formSignInKey.currentState!.validate() &&
+                      //     //       rememberPassword) {
+                      //     //     ScaffoldMessenger.of(context).showSnackBar(
+                      //     //       const SnackBar(
+                      //     //         content: Text('Login successful'),
+                      //     //       ),
+                      //     //     );
+                      //     //     Navigator.push(
+                      //     //       context,
+                      //     //       MaterialPageRoute(
+                      //     //         builder: (context) =>
+                      //     //             SelectionScreen(), // Replace NextScreen with your desired screen
+                      //     //       ),
+                      //     //     );
+                      //     //   } else if (!rememberPassword) {
+                      //     //     ScaffoldMessenger.of(context).showSnackBar(
+                      //     //       const SnackBar(
+                      //     //           content: Text(
+                      //     //               'Please agree to the processing of personal data')),
+                      //     //     );
+                      //     //   }
+                      //     // },
+                      //     child: const Text('Sign in'),
+                      //   ),
+                      // ),
                       const SizedBox(
                         height: 25.0,
                       ),
@@ -216,14 +256,14 @@ class _SignInScreenState extends State<SignInScreen> {
                       const SizedBox(
                         height: 25.0,
                       ),
-                     const Row(
+                      const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      //  children: [
-                       //   Logo(Logos.facebook_f),
-                       //   Logo(Logos.twitter),
-                       //   Logo(Logos.google),
-                       //   Logo(Logos.apple),
-                    //    ],
+                        //  children: [
+                        //   Logo(Logos.facebook_f),
+                        //   Logo(Logos.twitter),
+                        //   Logo(Logos.google),
+                        //   Logo(Logos.apple),
+                        //    ],
                       ),
                       const SizedBox(
                         height: 25.0,
@@ -269,5 +309,23 @@ class _SignInScreenState extends State<SignInScreen> {
         ],
       ),
     );
+  }
+
+  void _signIn() async {
+    String email = _emailContoller.text;
+    String password = _passwordContoller.text;
+
+    User? user = await _auth.signInWithEmailAndPassword(email, password);
+
+    if (user != null) {
+      print("User is already signin");
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (e) => const SelectionScreen(),
+          ));
+    } else {
+      print("some error occured");
+    }
   }
 }
