@@ -7,7 +7,6 @@ import 'package:canteen_final/screens/reserve_table.dart';
 
 class HomeUser extends StatefulWidget {
   const HomeUser({super.key});
-
   @override
   State<HomeUser> createState() => _HomeUserState();
 }

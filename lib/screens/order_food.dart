@@ -6,7 +6,7 @@ import 'package:canteen_final/screens/home_user.dart';
 import 'package:canteen_final/screens/table_booked.dart';
 
 class OrderFood extends StatefulWidget {
-  const OrderFood({super.key});
+  const OrderFood({Key? key}) : super(key: key);
 
   @override
   State<OrderFood> createState() => _OrderFoodState();
@@ -14,7 +14,6 @@ class OrderFood extends StatefulWidget {
 
 class _OrderFoodState extends State<OrderFood> {
   Map<String, int> cartItems = {};
-
 
   void addToCart(String item) {
     setState(() {
@@ -44,7 +43,7 @@ class _OrderFoodState extends State<OrderFood> {
       appBar: AppBar(
         title: Text("MENU"),
       ),
-      body:Container(
+      body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
             image: AssetImage("assets/orderfood.png"), // Replace "background_image.jpg" with your image file
@@ -67,8 +66,6 @@ class _OrderFoodState extends State<OrderFood> {
               _buildMenuItem('Shevbhaji Thali', 75),
               _buildMenuItem('Paneer Thali', 100),
               _buildMenuItem('Paneer Butter Masala', 120),
-
-
             ],
           ),
         ),
@@ -115,6 +112,7 @@ class _OrderFoodState extends State<OrderFood> {
     );
   }
 }
+
 class CartScreen extends StatelessWidget {
   final Map<String, int> cartItems;
 
@@ -122,10 +120,7 @@ class CartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate total price
-    // Calculate total price
     double totalPrice = calculateTotalPrice();
-
 
     return Scaffold(
       appBar: AppBar(
@@ -159,6 +154,20 @@ class CartScreen extends StatelessWidget {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BillScreen(cartItems: cartItems, totalPrice: totalPrice),
+                    ),
+                  );
+                },
+                child: Text('Confirm Order'),
+              ),
+            ),
           ],
         ),
       ),
@@ -166,9 +175,6 @@ class CartScreen extends StatelessWidget {
   }
 
   double getItemPrice(String item) {
-    // Implement your logic to get the price of each item
-    // This could be from a database, hardcoded, or calculated dynamically
-    // For demonstration purposes, returning a hardcoded price
     switch (item) {
       case 'Extra Chapati':
         return 7.0;
@@ -200,6 +206,7 @@ class CartScreen extends StatelessWidget {
         return 0.0;
     }
   }
+
   double calculateTotalPrice() {
     double totalPrice = 0;
     cartItems.forEach((item, quantity) {
@@ -210,3 +217,63 @@ class CartScreen extends StatelessWidget {
   }
 }
 
+class BillScreen extends StatelessWidget {
+  final Map<String, int> cartItems;
+  final double totalPrice;
+
+  BillScreen({required this.cartItems, required this.totalPrice});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Bill'),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("assets/orderfood.png"), // Background image for the bill screen
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                'Your order has been confirmed!',
+                style: TextStyle(fontSize: 24),
+              ),
+              SizedBox(height: 20),
+              // Display ordered items with quantity
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: cartItems.entries.map((entry) {
+                  return Text('${entry.key}: ${entry.value}'); // Display item name and quantity
+                }).toList(),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'Total Amount: Rs ${totalPrice.toStringAsFixed(2)}',
+                style: TextStyle(fontSize: 20),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (e) => const HomeUser(),
+                    ),
+                  );
+
+                },
+                child: Text('Back to Home'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
