@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Import the necessary package
+import 'package:flutter/services.dart';
 import 'package:canteen_final/screens/signin_screen.dart';
 import 'package:canteen_final/screens/selection_screen.dart';
 import 'package:provider/provider.dart';
@@ -43,15 +43,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(bottom: 20.0),
                     child: Text(
                       'Create Account',
                       style: TextStyle(
-                        fontSize: 24.0,
-                        fontWeight: FontWeight.bold,
+                          fontSize: 30.0,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF2C1812)
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -74,7 +75,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             return null;
                           },
                         ),
-                        SizedBox(height: 20.0),
+                        SizedBox(height: 30.0),
                         TextFormField(
                           controller: _passwordController,
                           decoration: InputDecoration(
@@ -89,7 +90,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           },
                           obscureText: true,
                         ),
-                        SizedBox(height: 20.0),
+                        SizedBox(height: 50.0),
                         ElevatedButton(
                           onPressed: () async {
                             if (_formSignupKey.currentState!.validate()) {
@@ -106,7 +107,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => SelectionScreen(),
+                                      builder: (context) => SelectionScreen(supabase: supabase),
                                     ),
                                   );
                                 } else {

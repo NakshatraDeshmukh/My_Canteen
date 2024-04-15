@@ -4,9 +4,12 @@ import 'package:canteen_final/widgets/custom_scaffold.dart';
 import 'package:canteen_final/theme/theme.dart';
 import 'package:canteen_final/screens/order_food.dart';
 import 'package:canteen_final/screens/reserve_table.dart';
+import 'package:supabase/supabase.dart';
+import 'package:canteen_final/screens/account_page.dart';
 
 class HomeUser extends StatefulWidget {
-  const HomeUser({super.key});
+  final SupabaseClient supabase;
+  const HomeUser({Key? key, required this.supabase}) : super(key: key);
   @override
   State<HomeUser> createState() => _HomeUserState();
 }
@@ -24,38 +27,58 @@ class _HomeUserState extends State<HomeUser> {
           children: <Widget>[
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Color(0xFF894B03),
+                color: Color(0xFF352922),
+                image: DecorationImage(
+                  image: AssetImage('assets/app_logo.png'),
+                  fit: BoxFit.cover,
+                ),
               ),
               child: Text(
-                "What's on your mind ? ",
+                "      What's on your mind ? ",
                 style: TextStyle(
                   color: Color(0xFFD5C4BA),
-                  fontSize: 24,
+                  fontSize: 20,
                 ),
               ),
             ),
             ListTile(
-              title: Text('Order Food'),
+              leading: Icon(Icons.restaurant, color: Colors.brown),
+              title: Text('Order Food', style: TextStyle(color: Colors.brown)),
               onTap: () {
+                final supabase = widget.supabase;
                 Navigator.push(
                     context,
                     MaterialPageRoute(
-                    builder: (e) => const OrderFood(),
+                    builder: (e) =>  OrderFood(supabase: supabase),
                 ),
                 );
               },   // Handle item 1 tap},
             ),
             ListTile(
-              title: Text('Reserve Table'),
+              leading: Icon(Icons.event_seat, color: Colors.brown),
+              title: Text('Reserve Table', style: TextStyle(color: Colors.brown)),
               onTap: () {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
-                    builder: (e) => const ReserveTable(),
+                    builder: (e) =>  ReserveTable(),
                 ),
                 );// Handle item 2 tap
               },
             ),
+            ListTile(
+              leading: Icon(Icons.account_circle, color: Colors.brown),
+              title: Text('Profile', style: TextStyle(color: Colors.brown)),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AccountPage(),
+                  ),
+                );
+              },
+            ),
+
           ],
         ),
       ),

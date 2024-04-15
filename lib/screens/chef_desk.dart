@@ -1,39 +1,62 @@
-
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:canteen_final/widgets/custom_scaffold.dart';
-import 'package:canteen_final/theme/theme.dart';
-import 'package:canteen_final/screens/verify_chef.dart';
+import 'package:supabase/supabase.dart';
+import 'package:canteen_final/screens/order_food.dart';
+
 class ChefDesk extends StatefulWidget {
-  const ChefDesk({super.key});
+  const ChefDesk({Key? key}) : super(key: key);
 
   @override
   State<ChefDesk> createState() => _ChefDeskState();
 }
-class _ChefDeskState extends State<ChefDesk> {
-  List<Order> orders = [
-    Order(id: 1, name: 'Shevbhaji Thali', isCompleted: false, isCanceled: false),
-    Order(id: 2, name: 'Uttappa', isCompleted: false, isCanceled: false),
-    Order(id: 3, name: 'Pav Bhaji', isCompleted: false, isCanceled: false),
-    Order(id: 4, name: 'Rice Plate', isCompleted: false, isCanceled: false),
-  ];
 
-  void toggleOrderCompletion(int id) {
-    setState(() {
-      final index = orders.indexWhere((order) => order.id == id);
-      orders[index].isCompleted = !orders[index].isCompleted;
-      if (orders[index].isCompleted) {
-        // If the order is completed, remove it from the list
-        orders.removeAt(index);
-      }
-    });
+class _ChefDeskState extends State<ChefDesk> {
+  late SupabaseClient supabase;
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+  GlobalKey<RefreshIndicatorState>();
+
+  @override
+  void initState() {
+    super.initState();
+    supabase = SupabaseClient(
+      'https://ssqtpwmwqypgxdubxxqs.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzcXRwd213cXlwZ3hkdWJ4eHFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTIyMjA3ODMsImV4cCI6MjAyNzc5Njc4M30.SFIQ0NHB8KowS26a4zwy80v0Dxl_7DzgQsXjfriSLtA',
+    );
+    fetchOrders();
   }
 
-  void cancelOrder(int id) {
-    setState(() {
-      final index = orders.indexWhere((order) => order.id == id);
-      orders[index].isCanceled = true;
-    });
+  List<Order> orders = [];
+
+  Future<void> fetchOrders() async {
+    try {
+      final response = await supabase.from('orders').select().not('is_completed', 'eq', true).not('is_cancelled', 'eq', true);
+      final List<Order> fetchedOrders = response.map<Order>((json) {
+        return Order.fromJson({
+          'id': json['id'],
+          'name': json['name'],
+          'quantity': json['quantity'],
+          'is_completed': json['is_completed'] ?? false, // Set to false if null
+          'is_cancelled': json['is_cancelled'] ?? false, // Set to false if null
+        });
+      }).toList();
+      setState(() {
+        orders = fetchedOrders;
+      });
+    } catch (error) {
+      print('Error fetching orders: $error');
+    }
+  }
+
+  Future<void> updateOrderStatus(int orderId, {bool isCompleted = false, bool isCancelled = false}) async {
+    final response = await supabase.from('orders').update({
+      'is_completed': isCompleted,
+      'is_cancelled': isCancelled,
+    }).eq('id', orderId);
+
+    if (response.error != null) {
+      print('Error updating order status: ${response.error!.message}');
+    } else {
+      print('Order status updated successfully');
+    }
   }
 
   @override
@@ -42,48 +65,73 @@ class _ChefDeskState extends State<ChefDesk> {
       appBar: AppBar(
         title: Text('Chef Desk'),
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/chefdesk.png'), // Provide your image path here
-            fit: BoxFit.cover,
+      body: RefreshIndicator(
+        key: _refreshIndicatorKey,
+        onRefresh: fetchOrders,
+        child: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/chefdesk.png'),
+              fit: BoxFit.cover,
+            ),
           ),
-        ),
-        child: ListView.builder(
-          itemCount: orders.length,
-          itemBuilder: (context, index) {
-            final order = orders[index];
-            return ListTile(
-              title: Container(
-                color: Colors.white,
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  order.name,
-                  style: TextStyle(
-                    decoration: order.isCanceled ? TextDecoration.lineThrough : null,
+          child: ListView.builder(
+            itemCount: orders.length,
+            itemBuilder: (context, index) {
+              final order = orders[index];
+              return ListTile(
+                title: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: EdgeInsets.all(8),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        child: Text(
+                          '${order.quantity}x ',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          order.name,
+                          style: TextStyle(
+                            color: Colors.black,
+                            decoration: order.isCancelled ? TextDecoration.lineThrough : null,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.cancel),
+                        onPressed: () async {
+                          final order = orders[index];
+                          setState(() {
+                            orders[index] = orders[index].copyWith(isCancelled: true);
+                          });
+                          await updateOrderStatus(order.id, isCancelled: true);
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.check),
+                        onPressed: () async {
+                          final order = orders[index];
+                          setState(() {
+                            orders.removeAt(index);
+                          });
+                          await updateOrderStatus(order.id, isCompleted: true);
+                        },
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (!order.isCompleted)
-                    IconButton(
-                      icon: order.isCompleted ? Icon(Icons.done) : Icon(Icons.done),
-                      onPressed: () {
-                        toggleOrderCompletion(order.id);
-                      },
-                    ),
-                  IconButton(
-                    icon: Icon(Icons.cancel),
-                    onPressed: () {
-                      cancelOrder(order.id);
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
@@ -93,8 +141,30 @@ class _ChefDeskState extends State<ChefDesk> {
 class Order {
   final int id;
   final String name;
+  final int quantity;
   bool isCompleted;
-  bool isCanceled;
+  bool isCancelled;
 
-  Order({required this.id, required this.name, this.isCompleted = false, this.isCanceled = false});
+  Order({required this.id, required this.name, required this.quantity, this.isCompleted = false, this.isCancelled = false});
+
+  factory Order.fromJson(Map<String, dynamic> json) {
+    return Order(
+      id: json['id'] as int,
+      name: json['name'] as String,
+      quantity: json['quantity'] as int,
+      isCompleted: json['is_completed'] ?? false,
+      isCancelled: json['is_cancelled'] ?? false,
+    );
+  }
+
+  // CopyWith method to create a new instance of Order with updated values
+  Order copyWith({int? id, String? name, int? quantity, bool? isCompleted, bool? isCancelled}) {
+    return Order(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      quantity: quantity ?? this.quantity,
+      isCompleted: isCompleted ?? this.isCompleted,
+      isCancelled: isCancelled ?? this.isCancelled,
+    );
+  }
 }

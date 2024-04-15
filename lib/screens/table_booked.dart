@@ -1,24 +1,17 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:canteen_final/screens/order_food.dart';
-import 'package:flutter/cupertino.dart';
-
-void main() {
-  runApp(MaterialApp(
-    home: TableBooked(
-      selectedDate: DateTime.now(),
-      selectedTime: TimeOfDay.now(),
-    ),
-  ));
-}
+import 'package:supabase/supabase.dart';
+import 'package:canteen_final/screens/home_user.dart';
 
 class TableBooked extends StatefulWidget {
   final DateTime selectedDate;
   final TimeOfDay selectedTime;
+  final SupabaseClient supabase;
 
   const TableBooked({
     required this.selectedDate,
     required this.selectedTime,
+    required this.supabase,
   });
 
   @override
@@ -26,17 +19,95 @@ class TableBooked extends StatefulWidget {
 }
 
 class _TableBookedState extends State<TableBooked> {
+  bool _isBooked = false;
+  Timer? _timer;
+  int _secondsRemaining = 15 * 60;
+  bool _timerStarted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTableStatus();
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      DateTime now = DateTime.now();
+      if (!_timerStarted &&
+          now.hour == widget.selectedTime.hour &&
+          now.minute == widget.selectedTime.minute) {
+        setState(() {
+          _timerStarted = true;
+        });
+      }
+
+      if (_timerStarted) {
+        setState(() {
+          if (_secondsRemaining > 0) {
+            _secondsRemaining--;
+          } else {
+            _timer?.cancel();
+            _updateTables();
+            Navigator.pop(context);
+          }
+        });
+      }
+    });
+  }
+
+  Future<void> _fetchTableStatus() async {
+    final response = await widget.supabase.from('tables').select('is_booked');
+    final List<Map<String, dynamic>>? data = response;
+
+    if (data != null) {
+      setState(() {
+        _isBooked = data.any((table) => table['is_booked'] == true);
+      });
+    }
+  }
+
+  Future<void> _updateTables() async {
+    for (int tableNumber = 1; tableNumber <= 30; tableNumber++) {
+      await widget.supabase
+          .from('tables')
+          .update({'is_booked': false})
+          .eq('table_number', tableNumber);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Reserve Table'),
         backgroundColor: Color(0xFFC39684),
+        automaticallyImplyLeading: false, // Removes back button
+        actions: [
+          IconButton(
+            icon: Icon(Icons.home), // Home icon button
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (e) =>  HomeUser(supabase: widget.supabase)
+                ),
+              );
+
+            },
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/reservetable.png'), // Replace 'background_image.jpg' with your image file
+            image: AssetImage('assets/reservetable.png'),
             fit: BoxFit.cover,
           ),
         ),
@@ -70,34 +141,13 @@ class _TableBookedState extends State<TableBooked> {
               CountdownTimer(
                 selectedDate: widget.selectedDate,
                 selectedTime: widget.selectedTime,
+                supabase: widget.supabase,
+                isBooked: _isBooked,
               ),
             ],
           ),
         ),
       ),
-      floatingActionButton: OrderFoodButton(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-    );
-  }
-}
-
-class OrderFoodButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return FloatingActionButton.extended(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const OrderFood(),
-          ),
-        );
-
-        // Add functionality to order food here
-      },
-      label: Text('Order Food'),
-      icon: Icon(Icons.fastfood),
-      backgroundColor: Colors.blue,
     );
   }
 }
@@ -105,10 +155,14 @@ class OrderFoodButton extends StatelessWidget {
 class CountdownTimer extends StatefulWidget {
   final DateTime selectedDate;
   final TimeOfDay selectedTime;
+  final SupabaseClient supabase;
+  final bool isBooked;
 
   const CountdownTimer({
     required this.selectedDate,
     required this.selectedTime,
+    required this.supabase,
+    required this.isBooked,
   });
 
   @override
@@ -149,17 +203,21 @@ class _CountdownTimerState extends State<CountdownTimer> {
             _secondsRemaining--;
           } else {
             _timer?.cancel();
-            Navigator.pop(context); // Navigating back to previous page
+            _updateTables();
+            Navigator.pop(context);
           }
         });
       }
     });
   }
 
-  String _formatTime(int seconds) {
-    int minutes = seconds ~/ 60;
-    int remainingSeconds = seconds % 60;
-    return '$minutes:${remainingSeconds.toString().padLeft(2, '0')} min';
+  Future<void> _updateTables() async {
+    for (int tableNumber = 1; tableNumber <= 30; tableNumber++) {
+      await widget.supabase
+          .from('tables')
+          .update({'is_booked': false})
+          .eq('table_number', tableNumber);
+    }
   }
 
   @override
@@ -167,8 +225,8 @@ class _CountdownTimerState extends State<CountdownTimer> {
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.blueGrey,
-        borderRadius: BorderRadius.circular(10),
+        color: widget.isBooked ?   Color(0xFF566D74) : Color(0xFF566D74),
+          borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
         _formatTime(_secondsRemaining),
@@ -180,5 +238,15 @@ class _CountdownTimerState extends State<CountdownTimer> {
       ),
     );
   }
+
+  String _formatTime(int seconds) {
+    int minutes = seconds ~/ 60;
+    int remainingSeconds = seconds % 60;
+    return '$minutes:${remainingSeconds.toString().padLeft(2, '0')} min';
+  }
 }
+
+
+
+
 

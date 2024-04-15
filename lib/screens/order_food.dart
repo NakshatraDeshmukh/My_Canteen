@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:canteen_final/widgets/custom_scaffold.dart';
-import 'package:canteen_final/theme/theme.dart';
+import 'package:supabase/supabase.dart';
 import 'package:canteen_final/screens/home_user.dart';
-import 'package:canteen_final/screens/table_booked.dart';
+import 'package:canteen_final/screens/bill_screen.dart';
 
 class OrderFood extends StatefulWidget {
-  const OrderFood({Key? key}) : super(key: key);
+  final SupabaseClient supabase;
+  const OrderFood({Key? key, required this.supabase}) : super(key: key);
 
   @override
   State<OrderFood> createState() => _OrderFoodState();
@@ -46,7 +45,7 @@ class _OrderFoodState extends State<OrderFood> {
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/orderfood.png"), // Replace "background_image.jpg" with your image file
+            image: AssetImage("assets/orderfood.png"),
             fit: BoxFit.cover,
           ),
         ),
@@ -74,8 +73,13 @@ class _OrderFoodState extends State<OrderFood> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => CartScreen(cartItems: cartItems)),
-          );
+            MaterialPageRoute(
+              builder: (context) => CartScreen(cartItems: cartItems, supabaseClient: widget.supabase),
+            ),
+          ).then((_) {
+            // Refresh the UI if necessary after returning from the CartScreen
+            setState(() {});
+          });
         },
         child: Icon(Icons.shopping_cart),
       ),
@@ -115,8 +119,9 @@ class _OrderFoodState extends State<OrderFood> {
 
 class CartScreen extends StatelessWidget {
   final Map<String, int> cartItems;
+  final SupabaseClient supabaseClient;
 
-  CartScreen({required this.cartItems});
+  CartScreen({required this.cartItems, required this.supabaseClient});
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +134,7 @@ class CartScreen extends StatelessWidget {
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/cart.png"), // Replace "background_image.jpg" with your image file
+            image: AssetImage("assets/cart.png"),
             fit: BoxFit.cover,
           ),
         ),
@@ -157,13 +162,14 @@ class CartScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => BillScreen(cartItems: cartItems, totalPrice: totalPrice),
+                      builder: (context) => BillScreen(cartItems: cartItems, totalPrice: totalPrice, supabaseClient: supabaseClient),
                     ),
                   );
+                  await addItemsToSupabase(context, supabaseClient, cartItems, totalPrice);
                 },
                 child: Text('Confirm Order'),
               ),
@@ -173,6 +179,33 @@ class CartScreen extends StatelessWidget {
       ),
     );
   }
+
+  Future<void> addItemsToSupabase(BuildContext context, SupabaseClient supabaseClient, Map<String, int> cartItems, double totalPrice) async {
+    List<Map<String, dynamic>> records = [];
+
+    cartItems.forEach((item, quantity) {
+      records.add({
+        'name': item,
+        'quantity': quantity,
+        'totalprice': getItemPrice(item) * quantity,
+        'is_cancelled': false,
+        'is_completed': false,
+      });
+    });
+
+    final response = await supabaseClient.from('orders').insert(records);
+
+    if (response.error != null) {
+      final snackBar = SnackBar(
+        content: Text('Error: ${response.error!.message}'),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      print('Error: ${response.error!.message}');
+    } else {
+      print('Items added to Supabase successfully');
+    }
+  }
+
 
   double getItemPrice(String item) {
     switch (item) {
@@ -214,66 +247,5 @@ class CartScreen extends StatelessWidget {
       totalPrice += itemPrice * quantity;
     });
     return totalPrice;
-  }
-}
-
-class BillScreen extends StatelessWidget {
-  final Map<String, int> cartItems;
-  final double totalPrice;
-
-  BillScreen({required this.cartItems, required this.totalPrice});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Bill'),
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("assets/orderfood.png"), // Background image for the bill screen
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                'Your order has been confirmed!',
-                style: TextStyle(fontSize: 24),
-              ),
-              SizedBox(height: 20),
-              // Display ordered items with quantity
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: cartItems.entries.map((entry) {
-                  return Text('${entry.key}: ${entry.value}'); // Display item name and quantity
-                }).toList(),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Total Amount: Rs ${totalPrice.toStringAsFixed(2)}',
-                style: TextStyle(fontSize: 20),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (e) => const HomeUser(),
-                    ),
-                  );
-
-                },
-                child: Text('Back to Home'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:canteen_final/screens/signup_screen.dart';
@@ -22,7 +21,6 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     final supabase = Provider.of<SupabaseClient>(context);
-
     return CustomScaffold(
       child: Column(
         children: [
@@ -55,7 +53,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           color: const Color(0xFF2C1812),
                         ),
                       ),
-                      const SizedBox(height: 40.0),
+                      const SizedBox(height: 20.0),
                       TextFormField(
                         controller: _emailController,
                         validator: (value) {
@@ -84,11 +82,10 @@ class _SignInScreenState extends State<SignInScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 25.0),
+                      const SizedBox(height: 15.0),
                       TextFormField(
                         controller: _passwordController,
                         obscureText: true,
-                        obscuringCharacter: '*',
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter Password';
@@ -115,7 +112,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 25.0),
+                      const SizedBox(height: 15.0),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -128,68 +125,102 @@ class _SignInScreenState extends State<SignInScreen> {
                                     rememberPassword = value ?? false;
                                   });
                                 },
-                                activeColor: const Color(0xFF4A2821),
                               ),
-                              const Text(
-                                'Remember me',
-                                style: TextStyle(
-                                  color: Colors.black45,
-                                ),
-                              ),
+                              const Text('Remember me'),
                             ],
                           ),
                           GestureDetector(
+                            onTap: () {
+                              // Add forget password functionality here
+                            },
                             child: const Text(
                               'Forget password?',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF4A2821),
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 25.0),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            if (_formKey.currentState!.validate()) {
-                              final email = _emailController.text;
-                              final password = _passwordController.text;
+                      const SizedBox(height: 20.0),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (_formKey.currentState!.validate()) {
+                            final email = _emailController.text.trim();
+                            final password = _passwordController.text.trim();
 
-                              try {
-                                final res = await supabase.auth.signInWithPassword(
-                                  email: email,
-                                  password: password,
+                            try {
+                              final AuthResponse res = await supabase.auth.signInWithPassword(
+                                email: email,
+                                password: password,
+                              );
+
+                              final Session? session = res.session;
+                              final User? user = res.user;
+
+                              if (session != null && user != null) {
+                                // Sign in successful, navigate to next screen
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => SelectionScreen(supabase: supabase)),
                                 );
-
-                                if (res.user != null) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Login successful')),
-                                  );
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => SelectionScreen(),
-                                    ),
-                                  );
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Login failed')),
-                                  );
-                                }
-                              } catch (error) {
-                                print('Sign-in error: $error');
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('An unexpected error occurred')),
+                              } else {
+                                // Sign in failed, show error message
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text('Sign In Failed'),
+                                    content: Text('Invalid email or password'),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: Text('OK'),
+                                      ),
+                                    ],
+                                  ),
                                 );
                               }
-
+                            } catch (error) {
+                              // Error occurred during sign-in process
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('Sign In Failed'),
+                                  content: Text('Invalid email or password'),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Text('OK'),
+                                    ),
+                                  ],
+                                ),
+                              );
                             }
-                          },
-                          child: const Text('Sign In'),
-                        ),
+                          }
+                        },
+                        child: const Text('      Sign In      '),
+                      ),
+
+
+                      const SizedBox(height: 10.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("Don't have an account? "),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => SignUpScreen()),
+                              );
+                            },
+                            child: const Text('Sign Up'),
+                          ),
+                        ],
                       ),
                     ],
                   ),
