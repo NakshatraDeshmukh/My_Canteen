@@ -1,16 +1,24 @@
-# canteen_final
+# 🍽️ Canteen Management System
 
-A new Flutter project.
+A mobile application developed using **Flutter** and **Supabase** to streamline canteen operations. The app allows users to place orders, book tables, and interact with canteen services, offering a seamless experience for both users and administrators.
 
-## Getting Started
+## 🌟 Features
 
-This project is a starting point for a Flutter application.
+- **User Registration & Authentication**: 🔐 Users can register and log in securely.
+- **Online Ordering**: 🍔 Browse the menu and place orders directly via the app.
+- **Table Booking**: 🪑 Reserve tables at the canteen.
+- **Admin Dashboard**: 👨‍💻 Admins can manage menu items, view orders, and track table reservations.
+- **Chef Desk**: 👨‍🍳 A dedicated section for chefs to view and process incoming orders.
+- **Real-Time Updates**: ⚡ Integrated with **Supabase** for live data synchronization.
+- **Version Control**: 🔄 Managed using **Git** for efficient collaboration and version control.
 
-A few resources to get you started if this is your first Flutter project:
+## 💻 Technologies Used
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- **Flutter**: 🎨 Cross-platform mobile application development.
+- **Dart**: 🖥️ Programming language used in Flutter.
+- **Supabase**: 🗄️ Backend-as-a-Service (BaaS) for real-time database management and authentication.
+- **Git**: 📂 Version control system for managing code and collaboration.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 📸 Screenshots
+
+![Screenshots](https://github.com/NakshatraDeshmukh/My_Canteen/blob/with-supabase-database/Screenshot_mycanteen.jpg)  
